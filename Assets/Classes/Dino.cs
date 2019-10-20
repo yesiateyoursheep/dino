@@ -7,7 +7,7 @@ public class Dino : MonoBehaviour
 	public Rigidbody rb;
 	private BoxCollider hitbox;
 	public GameObject avatar;
-	private GameManager GameManager;
+	private GameManager gameManager;
 	public List<Mesh> Anim;
 	private int _AnimNum = 0;
 	private int _AnimOffset;
@@ -25,7 +25,7 @@ public class Dino : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{
-		GameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 		hitbox = gameObject.GetComponent<BoxCollider>();
 		_StartPos = gameObject.transform.position;
 		GameManager.OnReset += OnReset;
@@ -40,12 +40,12 @@ public class Dino : MonoBehaviour
 	// Handle input reliably
 	void OnGUI(){
 		if(!GameManager.DebugPanel.activeSelf&&!GameManager.GameOverCanvas.activeSelf){
-			if(GameManager.Running){
+			if(gameManager.Running){
 				up = (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetMouseButton(0));
 				if(!up) dn = (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S));
 			}else{
 				if(Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.UpArrow) || Input.touchCount > 0 || Input.GetMouseButtonDown(0)){
-					GameManager.NewGame();
+					gameManager.NewGame();
 				}
 			}
 		}
@@ -53,7 +53,7 @@ public class Dino : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		if(GameManager.Running){
+		if(gameManager.Running){
 			if(Input.touchCount > 0){
 				up = false;
 				if(swipe==0f){
@@ -101,11 +101,11 @@ public class Dino : MonoBehaviour
 		}
 
 		// Change animation
-		if(GameManager.Running){
+		if(gameManager.Running){
 			_AnimWait -= Time.deltaTime;
 			if (_AnimWait < 0)
 			{
-				_AnimWait += 1.25f/GameManager.Speed;
+				_AnimWait += 1.25f/gameManager.Speed;
 				if (_AnimRun) _AnimNum = _AnimNum == 1 ? 0 : 1;
 			}
 			avatar.GetComponent<MeshFilter>().mesh = Anim[_AnimNum + _AnimOffset];
@@ -124,7 +124,7 @@ public class Dino : MonoBehaviour
 	// Collision handling
 	void OnTriggerEnter(Collider other)
 	{
-		GameManager.GameOver();
+		gameManager.GameOver();
 		avatar.GetComponent<MeshFilter>().mesh = Anim[5];
 	}
 }

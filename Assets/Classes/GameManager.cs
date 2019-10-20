@@ -6,12 +6,12 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public static bool Running = false;
-    public static float Speed = 0f;
+    public bool Running = false;
+    public float Speed = 0f;
     private System.Random random = new System.Random();
     public GameObject[] Spawnables;
     public TextMeshProUGUI txtScore;
-    public static int Score = 0;
+    public int Score = 0;
     public TextMeshProUGUI txtHighscore;
     private float nextspawn;
     public delegate void resetCallback();
