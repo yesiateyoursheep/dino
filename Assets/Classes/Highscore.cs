@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using SQLite.net;
 
 [Serializable]
 public class Highscore : IComparable<Highscore>
 {
+    [Primary]
+    public int id;
     public string Username;
     public int Score;
 
