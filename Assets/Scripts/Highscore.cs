@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using SQLite.net;
+using SQLite4Unity3d;
 
-[Serializable]
 public class Highscore : IComparable<Highscore>
 {
-    [Primary]
     public int id;
     public string Username;
     public int Score;

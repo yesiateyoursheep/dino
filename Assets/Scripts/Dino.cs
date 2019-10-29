@@ -27,8 +27,8 @@ public class Dino : MonoBehaviour
 	{
 		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 		hitbox = gameObject.GetComponent<BoxCollider>();
-		_StartPos = gameObject.transform.position;
-		GameManager.OnReset += OnReset;
+		_StartPos = gameObject.transform.position; // Store start pos for whenever the game is reset
+		GameManager.OnReset += OnReset; // Add this OnReset function to GameManager
 		starthitcenter = hitbox.center;
 		starthitsize = hitbox.size;
 	}
@@ -39,11 +39,14 @@ public class Dino : MonoBehaviour
 
 	// Handle input reliably
 	void OnGUI(){
+		// Only detect input when the debugpanel and gameovercanvas are inactive.
 		if(!GameManager.DebugPanel.activeSelf&&!GameManager.GameOverCanvas.activeSelf){
 			if(gameManager.Running){
+				// Jump or crouch when the game is running
 				up = (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetMouseButton(0));
 				if(!up) dn = (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S));
 			}else{
+				// Start the game if it isn't running and the player jumps.
 				if(Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.UpArrow) || Input.touchCount > 0 || Input.GetMouseButtonDown(0)){
 					gameManager.NewGame();
 				}
@@ -53,9 +56,14 @@ public class Dino : MonoBehaviour
 
 	void FixedUpdate()
 	{
+		// Handling swipes needs to be done in FixedUpdate()
+		// This method handles touch input differently from mouse, keyboard and controller.
 		if(gameManager.Running){
 			if(Input.touchCount > 0){
+				// If there is any touch input, disregard mouse, keyboard and controller.
 				up = false;
+				dn = false;
+				// Track the vertical trajectory of any swipe
 				if(swipe==0f){
 					swipestart = Input.GetTouch(0).position.y;
 					swipe = 0f;
@@ -65,10 +73,11 @@ public class Dino : MonoBehaviour
 				}
 				swipe += Time.deltaTime;
 			}else if(swipe>0f){
-				//Debug.Log((swipestart - swipeend).ToString());
+				// Crouch if the user swiped down
 				if(swipestart - swipeend > 50f){
 					dn = true;
 				}
+				// Otherwise jump
 				else up = true;
 				swipe -= (dn?Time.deltaTime/2:Time.deltaTime);
 			}
@@ -79,7 +88,7 @@ public class Dino : MonoBehaviour
 
 		_AnimOffset = dn?2:0;
 
-		// Handle input
+		// Take action based on input
 		if (this.transform.position[1] < 0.2)
 		{
 			_AnimRun = true;
@@ -100,11 +109,13 @@ public class Dino : MonoBehaviour
 			}
 		}
 
-		// Change animation
+		// Cycle through animation meshes
+		// Meshes are assigned through the edior UI for Dino.
 		if(gameManager.Running){
 			_AnimWait -= Time.deltaTime;
 			if (_AnimWait < 0)
 			{
+				// The speed of the animation is based upon the speed of the game
 				_AnimWait += 1.25f/gameManager.Speed;
 				if (_AnimRun) _AnimNum = _AnimNum == 1 ? 0 : 1;
 			}

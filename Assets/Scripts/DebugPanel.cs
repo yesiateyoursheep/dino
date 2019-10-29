@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+// Simple controller object for the debug panel
+
 public class DebugPanel : MonoBehaviour
 {
     public GameObject input;
@@ -23,6 +25,7 @@ public class DebugPanel : MonoBehaviour
         }
         enter = false;
     }
+    // Input is handled in OnGUI(), while actions are taken on Update()
     void OnGUI(){
         if(Input.GetKeyDown(KeyCode.Return)){
             enter = true;

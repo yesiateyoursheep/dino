@@ -84,21 +84,27 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Opening and closing the debug panel is managed here
         if(Input.GetKeyDown("`")){
             DebugPanel.SetActive(!DebugPanel.activeSelf);
         }
         if(Running){
+            // Update the score
             Score = (int)((Speed-7)*100);
             txtScore.text = Score.ToString();
             if(Score>Highscore.GetTop().Score){
                 txtHighscore.text = Score.ToString();
             }
+            // Day/Night cycle
             if(Score>250)
                 Sun.intensity = Math.Max(0f,Math.Min(1f,1.5f*(float)Math.Sin(Math.PI/5*Score/100)+0.5f));
             else
                 Sun.intensity = 1;
 
+            // Update the speed
             Speed+=Time.deltaTime/10;
+            
+            // Spawn obstacles
             nextspawn-=Time.deltaTime;
             if(nextspawn<=0f){
                 var target = Spawnables[random.Next(0,(Score<500?2:Spawnables.Length))];
