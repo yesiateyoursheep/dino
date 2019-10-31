@@ -72,7 +72,7 @@ public class GameManager : MonoBehaviour
     }
     public void SaveHighscore(){
         TextMeshProUGUI Username = GameObject.Find("GUI/GameOverCanvas/NewHighscore/Editor/Username/Text Area/Text").GetComponent<TextMeshProUGUI>();
-        new Highscore(Username.text,Score);
+        Highscore.New(Username.text,Score);
         IgnoreHighscore();
         PrintLeaderboard();
     }

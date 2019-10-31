@@ -6,21 +6,20 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using SQLite4Unity3d;
 
-[Serializable]
 public class GameData
 {
-    public DataService DataService = new DataService("game.db");
+    public DataService Dataservice = new DataService("game.db");
     public List<Highscore> Highscores = new List<Highscore>();
     public GameData(){
         
     }
-    public static bool Init(){
-        DataService.CreateDB(new []{Highscore});
+    public bool Init(){
+        Dataservice.CreateDB(new []{typeof(Highscore)});
 
         string[] defaultname = {"Clyde","Freddy","Anderson","Clayton","Cleetus","Big Red","Roderich","Phil","Collin","Jacky"};
         int[] defaultscore = {50,40,35,33,29,18,16,10,7,4};
         while(GameManager.gameData.Highscores.Count<10){
-            new Highscore(defaultname[GameManager.gameData.Highscores.Count],defaultscore[GameManager.gameData.Highscores.Count]);
+            Highscore.New(defaultname[GameManager.gameData.Highscores.Count],defaultscore[GameManager.gameData.Highscores.Count]);
         }
         return true;
     }
