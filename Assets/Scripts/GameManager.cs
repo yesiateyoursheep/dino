@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         gameData = new GameData();
-        GameData.Load();
+        gameData.Init();
 
         nextspawn = (float)random.NextDouble()*2;
         DebugPanel = FindObjectOfType<DebugPanel>().gameObject;
@@ -75,7 +75,6 @@ public class GameManager : MonoBehaviour
         new Highscore(Username.text,Score);
         IgnoreHighscore();
         PrintLeaderboard();
-        GameData.Save();
     }
     public void IgnoreHighscore(){
         GameObject.Find("GUI/GameOverCanvas/NewHighscore").SetActive(false);

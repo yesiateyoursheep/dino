@@ -9,33 +9,13 @@ using SQLite4Unity3d;
 [Serializable]
 public class GameData
 {
+    public DataService DataService = new DataService("game.db");
     public List<Highscore> Highscores = new List<Highscore>();
     public GameData(){
         
     }
-    public static void Save(){
-        if(!Directory.Exists(Path.Combine(Application.persistentDataPath,"Save")))
-            Directory.CreateDirectory(Path.Combine(Application.persistentDataPath,"Save"));
-        
-        if(File.Exists(Path.Combine(Application.persistentDataPath, "Save/game.db")))
-            File.Copy(Path.Combine(Application.persistentDataPath, "Save/game.db"),Path.Combine(Application.persistentDataPath, "Save/game.db.bak"),true);
-
-        BinaryFormatter formatter = new BinaryFormatter();
-        FileStream save = File.Create(Path.Combine(Application.persistentDataPath, "Save/game.db"));
-
-        formatter.Serialize(save,GameManager.gameData);
-
-        save.Close();
-    }
-    public static bool Load(){
-        if(File.Exists(Path.Combine(Application.persistentDataPath, "Save/game.db"))){
-            BinaryFormatter formatter = new BinaryFormatter();
-            FileStream save = File.Open(Path.Combine(Application.persistentDataPath, "Save/game.db"),FileMode.Open);
-
-            GameManager.gameData = (GameData)formatter.Deserialize(save);
-
-            save.Close();
-        }
+    public static bool Init(){
+        DataService.CreateDB(new []{Highscore});
 
         string[] defaultname = {"Clyde","Freddy","Anderson","Clayton","Cleetus","Big Red","Roderich","Phil","Collin","Jacky"};
         int[] defaultscore = {50,40,35,33,29,18,16,10,7,4};

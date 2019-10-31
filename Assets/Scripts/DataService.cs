@@ -40,7 +40,7 @@ public class DataService
 
 #if UNITY_ANDROID
             var loadDb = new WWW("jar:file://" + Application.dataPath + "!/assets/" + DatabaseName);  // this is the path to your StreamingAssets in android
-            while (!loadDb.isDone) { }  // CAREFUL here, for safety reasons you shouldn't let this while loop unattended, place a timer and error check
+            while (!loadDb.isDone) { }  // CAREFUL here, for safety reasons you shouldn't leave this while loop unattended, place a timer and error check
             // then save to Application.persistentDataPath
             File.WriteAllBytes(filepath, loadDb.bytes);
 #elif UNITY_IOS
@@ -80,7 +80,7 @@ public class DataService
 
     public void CreateDB(Type[] pTableTypes)
     {
-        var creaeList = pTableTypes.Where(x =>
+        var createList = pTableTypes.Where(x =>
         {
             _connection.CreateTable(x);
             return true;
@@ -96,7 +96,7 @@ public class DataService
         }
         catch(Exception)
         {
-
+            Debug.Log("There was an excemption when inserting into the database!");
         }
     }
 
