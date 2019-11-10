@@ -21,10 +21,12 @@ public class Dino : MonoBehaviour
 	private float swipe = 0f;
 	private float swipestart = 0f;
 	private float swipeend = 0f;
+	private GameObject LoginCanvas;
 
 	// Start is called before the first frame update
 	void Start()
 	{
+		LoginCanvas = GameObject.Find("GUI/LoginCanvas");
 		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 		hitbox = gameObject.GetComponent<BoxCollider>();
 		_StartPos = gameObject.transform.position; // Store start pos for whenever the game is reset
@@ -40,7 +42,7 @@ public class Dino : MonoBehaviour
 	// Handle input reliably
 	void OnGUI(){
 		// Only detect input when the debugpanel and gameovercanvas are inactive.
-		if(!GameManager.DebugPanel.activeSelf&&!GameManager.GameOverCanvas.activeSelf){
+		if(!LoginCanvas.activeSelf&&!GameManager.DebugPanel.activeSelf&&!GameManager.GameOverCanvas.activeSelf){
 			if(gameManager.Running){
 				// Jump or crouch when the game is running
 				up = (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetMouseButton(0));

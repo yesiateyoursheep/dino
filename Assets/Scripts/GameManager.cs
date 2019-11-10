@@ -26,8 +26,7 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        gameData = new GameData();
-        gameData.Init();
+        gameData = gameObject.AddComponent(typeof(GameData)) as GameData;
 
         nextspawn = (float)random.NextDouble()*2;
         DebugPanel = FindObjectOfType<DebugPanel>().gameObject;
@@ -35,7 +34,6 @@ public class GameManager : MonoBehaviour
         GameOverCanvas = GameObject.Find("GUI/GameOverCanvas");
         GameOverCanvas.SetActive(false);
         startTxt = GameObject.Find("GUI/IngameCanvas/Start");
-        txtHighscore.text = Highscore.GetTop().Score.ToString();
     }
 
     public void NewGame(){
@@ -46,7 +44,7 @@ public class GameManager : MonoBehaviour
             Speed = 7;
             Score = 0;
 
-            txtHighscore.text = Highscore.GetTop().Score.ToString();
+            txtHighscore.text = gameData.user.score.ToString();
 
             startTxt.SetActive(false);
             GameOverCanvas.SetActive(false);
@@ -59,25 +57,11 @@ public class GameManager : MonoBehaviour
         Speed = 0;
         newGameWait = Time.realtimeSinceStartup + 1f;
         GameOverCanvas.SetActive(true);
-        GameObject.Find("GUI/GameOverCanvas/NewHighscore").SetActive(Score>Highscore.GetBot().Score);
-        PrintLeaderboard();
-    }
-    public void PrintLeaderboard(){
-        gameData.Highscores.Sort();
-        TextMeshProUGUI Leaderboard = GameObject.Find("GUI/GameOverCanvas/Leaderboard/Viewport/Content/txtLeaderboard").GetComponent<TextMeshProUGUI>();
-        Leaderboard.text = "";
-        for(var i=0;i<gameData.Highscores.Count;i++){
-            Leaderboard.text += "<line-height=0.001em><align=left>"+(i+1).ToString()+") "+gameData.Highscores[i].Username+"\n<align=right>"+gameData.Highscores[i].Score.ToString()+"<line-height=1em>\n";
+        if(Score>gameData.user.score){
+            gameData.SaveHighscore(Score);
+        }else{
+            gameData.GetLeaderboard();
         }
-    }
-    public void SaveHighscore(){
-        TextMeshProUGUI Username = GameObject.Find("GUI/GameOverCanvas/NewHighscore/Editor/Username/Text Area/Text").GetComponent<TextMeshProUGUI>();
-        Highscore.New(Username.text,Score);
-        IgnoreHighscore();
-        PrintLeaderboard();
-    }
-    public void IgnoreHighscore(){
-        GameObject.Find("GUI/GameOverCanvas/NewHighscore").SetActive(false);
     }
 
     // Update is called once per frame
@@ -91,7 +75,7 @@ public class GameManager : MonoBehaviour
             // Update the score
             Score = (int)((Speed-7)*100);
             txtScore.text = Score.ToString();
-            if(Score>Highscore.GetTop().Score){
+            if(Score>gameData.user.score){
                 txtHighscore.text = Score.ToString();
             }
             // Day/Night cycle

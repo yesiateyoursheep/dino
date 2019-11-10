@@ -1,46 +1,166 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using SQLite4Unity3d;
+using System.Web;
+using Newtonsoft.Json;
+using UnityEngine;
+using UnityEngine.Networking;
+using TMPro;
 
-public class GameData
+public class GameData : MonoBehaviour
 {
-    public DataService Dataservice = new DataService("game.db");
     public List<Highscore> Highscores = new List<Highscore>();
-    public GameData(){
-        
+    private static readonly string urltemplate = "https://newsimland.com/~Asriel-Repp/{0}.php?get&{1}";
+    public User user;
+    public Leaderboard leaderboard;
+    
+    public void Login(string username, string password)
+    {
+        var @params = String.Format("login&username={0}&password={1}",HttpUtility.UrlEncode(username),HttpUtility.UrlEncode(password));
+        StartCoroutine(Get(
+            String.Format(urltemplate,"account",@params),
+            (UnityWebRequest webRequest) => {
+                TextMeshProUGUI txtLoginDesc = GameObject.Find("GUI/LoginCanvas/Login/Form/Desc").GetComponent<TextMeshProUGUI>();
+                if(webRequest.isNetworkError){
+                    txtLoginDesc.text = "<color=red>There was a network error! Please try again.</color>";
+                    return false;
+                }
+                try{
+                    var result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
+                    if(result.success){
+                        user = result.user;
+                        user.loggedin = true;
+                        GameObject.Find("GUI/LoginCanvas").SetActive(false);
+                        GameObject.Find("GUI/IngameCanvas/HighScore").GetComponent<TextMeshProUGUI>().text = user.score.ToString();
+                    }else{
+                        txtLoginDesc.text = "<color=red>"+result.msg+"</color>";
+                    }
+                    return true;
+                }
+                catch{
+                    txtLoginDesc.text = "<color=red>"+webRequest.downloadHandler.text+"</color>";
+                    return false;
+                }
+            }
+        ));
     }
-    public bool Init(){
-        Dataservice.CreateDB(new []{typeof(Highscore)});
-
-        string[] defaultname = {"Clyde","Freddy","Anderson","Clayton","Cleetus","Big Red","Roderich","Phil","Collin","Jacky"};
-        int[] defaultscore = {50,40,35,33,29,18,16,10,7,4};
-        while(GameManager.gameData.Highscores.Count<10){
-            Highscore.New(defaultname[GameManager.gameData.Highscores.Count],defaultscore[GameManager.gameData.Highscores.Count]);
+    public void Register(string username, string password){
+        var @params = String.Format("register&username={0}&password={1}",HttpUtility.UrlEncode(username),HttpUtility.UrlEncode(password));
+        StartCoroutine(Get(
+            String.Format(urltemplate,"account",@params),
+            (UnityWebRequest webRequest) => {
+                TextMeshProUGUI txtLoginDesc = GameObject.Find("GUI/LoginCanvas/Login/Form/Desc").GetComponent<TextMeshProUGUI>();
+                if(webRequest.isNetworkError){
+                    txtLoginDesc.text = "<color=red>There was a network error! Please try again.</color>";
+                    return false;
+                }
+                try{
+                    var result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
+                    if(result.success){
+                        user = result.user;
+                        user.loggedin = true;
+                        GameObject.Find("GUI/LoginCanvas").SetActive(false);
+                    }else{
+                        txtLoginDesc.text = "<color=red>"+result.msg+"</color>";
+                    }
+                    return true;
+                }
+                catch{
+                    txtLoginDesc.text = "<color=red>"+webRequest.downloadHandler.text+"</color>";
+                    return false;
+                }
+            }
+        ));
+    }
+    public void GetLeaderboard(){
+        GameObject.Find("GUI/GameOverCanvas/Leaderboard/Viewport/Content/txtLeaderboard").GetComponent<TextMeshProUGUI>().text = "Loading... Please wait.";
+        StartCoroutine(Get(
+            String.Format(urltemplate,"leaderboard",""),
+            (UnityWebRequest webRequest) => {
+                TextMeshProUGUI txtLeaderboard = GameObject.Find("GUI/GameOverCanvas/Leaderboard/Viewport/Content/txtLeaderboard").GetComponent<TextMeshProUGUI>();
+                txtLeaderboard.text = "";
+                if(webRequest.isNetworkError){
+                    txtLeaderboard.text = "<color=red>There was a network error! Please try again.</color>";
+                    return false;
+                }
+                try{
+                    leaderboard = JsonConvert.DeserializeObject<Leaderboard>(webRequest.downloadHandler.text);
+                    for(var i=0;i<leaderboard.users.Length;i++){
+                        txtLeaderboard.text += "<line-height=0.001em><align=left>"+(i+1).ToString()+") "+leaderboard.users[i].username+"\n<align=right>"+leaderboard.users[i].score.ToString()+"<line-height=1em>\n";
+                        if(leaderboard.users[i].username == user.username){
+                            user.score = leaderboard.users[i].score;
+                        }
+                    }
+                    return true;
+                }
+                catch{
+                    txtLeaderboard.text = "<color=red>"+webRequest.downloadHandler.text+"</color>";
+                    return false;
+                }
+            }
+        ));
+    }
+    public void SaveHighscore(int score){
+        GameObject.Find("GUI/GameOverCanvas/Leaderboard/Viewport/Content/txtLeaderboard").GetComponent<TextMeshProUGUI>().text = "Saving your new highscore!";
+        var @params = String.Format("highscore&token={0}&score={1}",user.token,score);
+        StartCoroutine(Get(
+            String.Format(urltemplate,"account",@params),
+            (UnityWebRequest webRequest) => {
+                TextMeshProUGUI txtLeaderboard = GameObject.Find("GUI/GameOverCanvas/Leaderboard/Viewport/Content/txtLeaderboard").GetComponent<TextMeshProUGUI>();
+                if(webRequest.isNetworkError){
+                    txtLeaderboard.text = "<color=red>There was a network error! Please try again.</color>";
+                    Debug.Log("Failed to record high score! "+webRequest.error);
+                    return false;
+                }
+                try{
+                    var result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
+                    if(result.success){
+                        GetLeaderboard();
+                        return true;
+                    }
+                    else{
+                        txtLeaderboard.text = "<color=red>"+result.msg+"</color>";
+                        Debug.Log("Failed to record high score! "+result.msg);
+                        //GetLeaderboard();
+                        return false;
+                    }
+                }
+                catch{
+                    txtLeaderboard.text = "<color=red>"+webRequest.downloadHandler.text+"</color>";
+                    Debug.Log("Failed to record high score! "+webRequest.downloadHandler.text);
+                    return false;
+                }
+            }
+        ));
+    }
+    public IEnumerator Get(string uri, Func<UnityWebRequest,bool> callback)
+    {
+        Debug.Log("Requesting '"+uri+"'");
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+        {
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+            
+            callback(webRequest);
         }
-        return true;
     }
 }
 
-/*
-create table Highscore(
-    id integer primary key autoincrement,
-    name text not null,
-    score int not null
-);
-
-insert into highscore(name,score) values("Clyde",50);
-insert into highscore(name,score) values("Freddy",40);
-insert into highscore(name,score) values("Anderson",35);
-insert into highscore(name,score) values("Clayton",33);
-insert into highscore(name,score) values("Cleetus",29);
-insert into highscore(name,score) values("Big Red",18);
-insert into highscore(name,score) values("Roderich",16);
-insert into highscore(name,score) values("Phil",10);
-insert into highscore(name,score) values("Collin",7);
-insert into highscore(name,score) values("Jacky",4);
-
- */
+struct Account{
+    public bool success;
+    public string msg;
+    public string action;
+    public User user;
+}
+public struct User{
+    public string username;
+    public string token;
+    public bool loggedin;
+    public int score;
+}
+/*struct UserStatus{
+    public User[] users;
+}*/
+public struct Leaderboard{
+    public User[] users;
+}
