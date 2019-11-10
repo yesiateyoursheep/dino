@@ -14,13 +14,10 @@ public class Dino : MonoBehaviour
 	private bool _AnimRun;
 	private float _AnimWait = 0.25f;
 	private Vector3 _StartPos;
-	private bool up;
-	private bool dn;
+	public bool up;
+	public bool dn;
 	private Vector3 starthitcenter;
 	private Vector3 starthitsize;
-	private float swipe = 0f;
-	private float swipestart = 0f;
-	private float swipeend = 0f;
 	private GameObject LoginCanvas;
 
 	// Start is called before the first frame update
@@ -39,55 +36,8 @@ public class Dino : MonoBehaviour
 		gameObject.transform.position = _StartPos;
 	}
 
-	// Handle input reliably
-	void OnGUI(){
-		// Only detect input when the debugpanel and gameovercanvas are inactive.
-		if(!LoginCanvas.activeSelf&&!GameManager.DebugPanel.activeSelf&&!GameManager.GameOverCanvas.activeSelf){
-			if(gameManager.Running){
-				// Jump or crouch when the game is running
-				up = (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetMouseButton(0));
-				if(!up) dn = (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S));
-			}else{
-				// Start the game if it isn't running and the player jumps.
-				if(Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.UpArrow) || Input.touchCount > 0 || Input.GetMouseButtonDown(0)){
-					gameManager.NewGame();
-				}
-			}
-		}
-	}
-
 	void FixedUpdate()
 	{
-		// Handling swipes needs to be done in FixedUpdate()
-		// This method handles touch input differently from mouse, keyboard and controller.
-		if(gameManager.Running){
-			if(Input.touchCount > 0){
-				// If there is any touch input, disregard mouse, keyboard and controller.
-				up = false;
-				dn = false;
-				// Track the vertical trajectory of any swipe
-				if(swipe==0f){
-					swipestart = Input.GetTouch(0).position.y;
-					swipe = 0f;
-				}
-				else{
-					swipeend = Input.GetTouch(0).position.y;
-				}
-				swipe += Time.deltaTime;
-			}else if(swipe>0f){
-				// Crouch if the user swiped down
-				if(swipestart - swipeend > 50f){
-					dn = true;
-				}
-				// Otherwise jump
-				else up = true;
-				swipe -= (dn?Time.deltaTime/2:Time.deltaTime);
-			}
-			else{
-				swipe = 0f;
-			}
-		}
-
 		_AnimOffset = dn?2:0;
 
 		// Take action based on input

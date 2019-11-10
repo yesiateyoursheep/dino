@@ -7,6 +7,7 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     public bool Running = false;
+    public bool dinofocus = false;
     public float Speed = 0f;
     private System.Random random = new System.Random();
     public GameObject[] Spawnables;
@@ -41,6 +42,7 @@ public class GameManager : MonoBehaviour
             Debug.Log("New game started.");
             Time.timeScale = 1f;
             Running = true;
+            dinofocus = true;
             Speed = 7;
             Score = 0;
 
@@ -51,9 +53,16 @@ public class GameManager : MonoBehaviour
             OnReset();
         }else Debug.Log("Need to wait for "+Math.Abs(Time.realtimeSinceStartup-newGameWait).ToString()+" more seconds.");
     }
+    public void Pause(){
+        if(Running) Time.timeScale = Time.timeScale==1f?0f:1f;
+    }
+    public void Pause(bool pause){
+        if(Running) Time.timeScale = pause?0f:1f;
+    }
     public void GameOver(){
         Time.timeScale = 0f;
         Running = false;
+        dinofocus = false;
         Speed = 0;
         newGameWait = Time.realtimeSinceStartup + 1f;
         GameOverCanvas.SetActive(true);
@@ -70,8 +79,15 @@ public class GameManager : MonoBehaviour
         // Opening and closing the debug panel is managed here
         if(Input.GetKeyDown("`")){
             DebugPanel.SetActive(!DebugPanel.activeSelf);
+            if(DebugPanel.activeSelf){
+                Pause(true);
+                dinofocus = false;
+            }else{
+                Pause(false);
+                dinofocus = true;
+            }
         }
-        if(Running){
+        if(Running&&dinofocus){
             // Update the score
             Score = (int)((Speed-7)*100);
             txtScore.text = Score.ToString();
