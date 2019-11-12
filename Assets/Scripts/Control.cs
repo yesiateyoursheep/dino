@@ -45,14 +45,7 @@ public class Control : MonoBehaviour
         timeOfTravel = 0.25f;
         currentTime = 0f;
 
-        StartCoroutine(Animate((btnToggle.text=="<")?new Vector3(-200f,0f,0f):new Vector3(0f,0f,0f),(btnToggle.text=="<")?new Vector3(0f,0f,0f):new Vector3(-200f,0f,0f),LobbyCanvas));
-    }
-    public void Jump(){
-        if(gameManager.Running) dino.up = true;
-        else gameManager.NewGame();
-    }
-    public void Crouch(){
-        if(gameManager.dinofocus) dino.dn = true;
+        StartCoroutine(Animate((btnToggle.text=="<")?new Vector3(-205f,-1f,0f):new Vector3(-5f,-1f,0f),(btnToggle.text=="<")?new Vector3(-5f,-1f,0f):new Vector3(-205f,-1f,0f),LobbyCanvas));
     }
     IEnumerator Animate(Vector3 start, Vector3 end, RectTransform target){
         while(currentTime<timeOfTravel){
@@ -68,8 +61,8 @@ public class Control : MonoBehaviour
 			if(gameManager.Running){
                 if(Input.GetKey(KeyCode.Escape)) gameManager.Pause();
 				// Jump or crouch when the game is running
-				dino.up = (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W));
-				if(!dino.up) dino.dn = (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S));
+				if(Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) dino.up = true;
+				if((!dino.up)&&(Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))) dino.dn = true;
 			}else{
 				// Start the game if it isn't running and the player jumps.
 				if(Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKey(KeyCode.S)){
@@ -86,8 +79,8 @@ public class Control : MonoBehaviour
 		if(gameManager.Running){
 			if(Input.touchCount > 0){
 				// If there is any touch input, disregard mouse, keyboard and controller.
-				dino.up = false;
-				dino.dn = false;
+				//dino.up = false;
+				//dino.dn = false;
 				// Track the vertical trajectory of any swipe
 				if(swipe==0f){
 					swipestart = Input.GetTouch(0).position.y;

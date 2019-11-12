@@ -32,6 +32,7 @@ public class GameData : MonoBehaviour
                         user.loggedin = true;
                         GameObject.Find("GUI/LoginCanvas").SetActive(false);
                         GameObject.Find("GUI/IngameCanvas/HighScore").GetComponent<TextMeshProUGUI>().text = user.score.ToString();
+                        GameObject.Find("GameManager").GetComponent<GameManager>().dinofocus = true;
                     }else{
                         txtLoginDesc.text = "<color=red>"+result.msg+"</color>";
                     }
