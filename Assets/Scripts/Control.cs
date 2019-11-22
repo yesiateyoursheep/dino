@@ -59,7 +59,7 @@ public class Control : MonoBehaviour
 		// Only detect input when the debugpanel and gameovercanvas are inactive.
 		if(gameManager.dinofocus){
 			if(gameManager.Running){
-                if(Input.GetKey(KeyCode.Escape)) gameManager.Pause();
+				if(Input.GetKey(KeyCode.Escape)) gameManager.Pause();
 				// Jump or crouch when the game is running
 				if(Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) dino.up = true;
 				if((!dino.up)&&(Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))) dino.dn = true;

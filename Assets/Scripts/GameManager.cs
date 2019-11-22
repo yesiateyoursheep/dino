@@ -17,7 +17,8 @@ public class GameManager : MonoBehaviour
     private float nextspawn;
     public delegate void resetCallback();
     public static resetCallback OnReset;
-    public static GameObject DebugPanel;
+    public static GameObject Chat;
+    public static GameObject ChatPreview;
     public Light Sun;
     private static GameObject startTxt;
     private static float newGameWait;
@@ -30,8 +31,8 @@ public class GameManager : MonoBehaviour
         gameData = gameObject.AddComponent(typeof(GameData)) as GameData;
 
         nextspawn = (float)random.NextDouble()*2;
-        DebugPanel = FindObjectOfType<DebugPanel>().gameObject;
-        DebugPanel.SetActive(false);
+        Chat = FindObjectOfType<Chat>().gameObject;
+        ChatPreview = GameObject.Find("GUI/IngameCanvas/ChatPreview");
         GameOverCanvas = GameObject.Find("GUI/GameOverCanvas");
         GameOverCanvas.SetActive(false);
         startTxt = GameObject.Find("GUI/IngameCanvas/Start");
@@ -54,10 +55,12 @@ public class GameManager : MonoBehaviour
         }else Debug.Log("Need to wait for "+Math.Abs(Time.realtimeSinceStartup-newGameWait).ToString()+" more seconds.");
     }
     public void Pause(){
-        if(Running) Time.timeScale = Time.timeScale==1f?0f:1f;
+        if(Running) Time.timeScale = Time.timeScale==0f?1f:0f;
+        dinofocus = Time.timeScale == 0f;
     }
     public void Pause(bool pause){
         if(Running) Time.timeScale = pause?0f:1f;
+        dinofocus = !pause;
     }
     public void GameOver(){
         Time.timeScale = 0f;
@@ -77,14 +80,11 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         // Opening and closing the debug panel is managed here
-        if(Input.GetKeyDown("`")){
-            DebugPanel.SetActive(!DebugPanel.activeSelf);
-            if(DebugPanel.activeSelf){
+        if(dinofocus){
+            if(Input.GetKeyDown(KeyCode.Return)){
+                Chat.SetActive(true);
+                ChatPreview.SetActive(false);
                 Pause(true);
-                dinofocus = false;
-            }else{
-                Pause(false);
-                dinofocus = true;
             }
         }
         if(Running&&dinofocus){

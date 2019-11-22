@@ -13,6 +13,14 @@ public class GameData : MonoBehaviour
     private static readonly string urltemplate = "https://newsimland.com/~Asriel-Repp/{0}.php?get&{1}";
     public User user;
     public Leaderboard leaderboard;
+    public List<Message> messages = new List<Message>();
+    public Chat chat;
+    
+    void Start(){
+        var chatobject = GameObject.Find("GUI/IngameCanvas/Chat");
+        chatobject.SetActive(false);
+        chat = chatobject.GetComponent<Chat>();
+    }
     
     public void Login(string username, string password)
     {
@@ -26,13 +34,15 @@ public class GameData : MonoBehaviour
                     return false;
                 }
                 try{
-                    var result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
+                    Account result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
                     if(result.success){
                         user = result.user;
                         user.loggedin = true;
                         GameObject.Find("GUI/LoginCanvas").SetActive(false);
                         GameObject.Find("GUI/IngameCanvas/HighScore").GetComponent<TextMeshProUGUI>().text = user.score.ToString();
                         GameObject.Find("GameManager").GetComponent<GameManager>().dinofocus = true;
+                        GetMessages();
+                        StartCoroutine(GetMessagesLoop());
                     }else{
                         txtLoginDesc.text = "<color=red>"+result.msg+"</color>";
                     }
@@ -56,7 +66,7 @@ public class GameData : MonoBehaviour
                     return false;
                 }
                 try{
-                    var result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
+                    Account result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
                     if(result.success){
                         user = result.user;
                         user.loggedin = true;
@@ -87,8 +97,8 @@ public class GameData : MonoBehaviour
                 try{
                     leaderboard = JsonConvert.DeserializeObject<Leaderboard>(webRequest.downloadHandler.text);
                     for(var i=0;i<leaderboard.users.Length;i++){
-                        txtLeaderboard.text += "<line-height=0.001em><align=left>"+(i+1).ToString()+") "+leaderboard.users[i].username+"\n<align=right>"+leaderboard.users[i].score.ToString()+"<line-height=1em>\n";
-                        if(leaderboard.users[i].username == user.username){
+                        txtLeaderboard.text += "<line-height=0.001em><align=left>"+(i+1).ToString()+") "+leaderboard.users[i].username+"#"+leaderboard.users[i].id+"\n<align=right>"+leaderboard.users[i].score.ToString()+"<line-height=1em>\n";
+                        if(leaderboard.users[i].id == user.id){
                             user.score = leaderboard.users[i].score;
                         }
                     }
@@ -114,7 +124,7 @@ public class GameData : MonoBehaviour
                     return false;
                 }
                 try{
-                    var result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
+                    Account result = JsonConvert.DeserializeObject<Account>(webRequest.downloadHandler.text);
                     if(result.success){
                         GetLeaderboard();
                         return true;
@@ -134,9 +144,99 @@ public class GameData : MonoBehaviour
             }
         ));
     }
+    public void GetMessages(){
+        StartCoroutine(Get(
+            String.Format(urltemplate,"message",""),
+            (UnityWebRequest webRequest) => {
+                if(webRequest.isNetworkError){
+                    //txtLeaderboard.text = "<color=red>There was a network error! Please try again.</color>";
+                    Debug.Log("Failed to fetch chat history! "+webRequest.error);
+                    chat.AddLine("<color=red>Failed to fetch chat history!</color>");
+                    return false;
+                }
+                Messages result = JsonConvert.DeserializeObject<Messages>(webRequest.downloadHandler.text);
+                if(result.success){
+                    Array.Reverse(result.messages);
+                    for(int i=0;i<result.messages.Length;i++){
+                        if(messages.Count==0 || result.messages[i].id>messages[messages.Count-1].id){
+                            chat.AddLine(result.messages[i]);
+                            messages.Add(result.messages[i]);
+                        }
+                    }
+                    return true;
+                }
+                else{
+                    chat.AddLine("<color=red>"+result.msg+"</color>");
+                    return false;
+                }
+            }
+        ));
+    }
+    public IEnumerator GetMessagesLoop(){
+        while(!string.IsNullOrEmpty(user.token)){
+            yield return new WaitForSeconds(1f);
+            GetMessages(messages[messages.Count-1].sent);
+        }
+    }
+    public void GetMessages(string since){
+        StartCoroutine(Get(
+            String.Format(urltemplate,"message","since="+since.Replace(" ","%20")),
+            (UnityWebRequest webRequest) => {
+                if(webRequest.isNetworkError){
+                    //txtLeaderboard.text = "<color=red>There was a network error! Please try again.</color>";
+                    Debug.Log("Failed to update chat! "+webRequest.error);
+                    chat.AddLine("<color=red>Failed to fetch chat history!</color>");
+                    return false;
+                }
+                Messages result = JsonConvert.DeserializeObject<Messages>(webRequest.downloadHandler.text);
+                if(result.success){
+                    Array.Reverse(result.messages);
+                    for(int i=0;i<result.messages.Length;i++){
+                        if(result.messages[i].id>messages[messages.Count-1].id){
+                            chat.AddLine(result.messages[i]);
+                            messages.Add(result.messages[i]);
+                        }
+                    }
+                    return true;
+                }
+                else{
+                    chat.AddLine("<color=red>"+result.msg+"</color>");
+                    return false;
+                }
+            }
+        ));
+    }
+    public void SendAMessage(string message){
+        StartCoroutine(Get(
+            String.Format(urltemplate,"message","send&token="+user.token+"&message="+HttpUtility.UrlEncode(message)),
+            (UnityWebRequest webRequest) => {
+                if(webRequest.isNetworkError){
+                    //txtLeaderboard.text = "<color=red>There was a network error! Please try again.</color>";
+                    Debug.Log("Failed to send message! "+webRequest.error);
+                    chat.AddLine("<color=red>Failed to send your message!</color>");
+                    return false;
+                }
+                Messages result = JsonConvert.DeserializeObject<Messages>(webRequest.downloadHandler.text);
+                if(result.success){
+                    Array.Reverse(result.messages);
+                    for(int i=0;i<result.messages.Length;i++){
+                        if(result.messages[i].id>messages[messages.Count-1].id){
+                            chat.AddLine(result.messages[i]);
+                            messages.Add(result.messages[i]);
+                        }
+                    }
+                    return true;
+                }
+                else{
+                    chat.AddLine("<color=red>"+result.msg+"</color>");
+                    return false;
+                }
+            }
+        ));
+    }
     public IEnumerator Get(string uri, Func<UnityWebRequest,bool> callback)
     {
-        Debug.Log("Requesting '"+uri+"'");
+        //Debug.Log("Requesting '"+uri+"'");
         using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
         {
             // Request and wait for the desired page.
@@ -154,6 +254,7 @@ struct Account{
     public User user;
 }
 public struct User{
+    public int id;
     public string username;
     public string token;
     public bool loggedin;
@@ -164,4 +265,16 @@ public struct User{
 }*/
 public struct Leaderboard{
     public User[] users;
+}
+public struct Messages{
+    public bool success;
+    public string msg;
+    public Message[] messages;
+}
+public struct Message{
+    public int id;
+    public User author;
+    public string content;
+    public string sent;
+    
 }
